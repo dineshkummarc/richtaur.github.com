@@ -10,6 +10,7 @@ var canvasHeight
 var dir = ""
 var fileLines = new Array()
 var filePointers = new Array()
+var INKEY$Queue = new Array()
 var textColor = 15
 var textColorBackground = 0
 var textX = DEFAULT
@@ -28,6 +29,7 @@ var Palette = {
 	9: "RGB(85, 85, 255)",
 	10: "RGB(85, 255, 85)",
 	12: "RGB(255, 85, 85)",
+	14: "RGB(255, 255, 0)",
 	15: "RGB(255, 255, 255)",
 	16: "RGB(113, 56, 0)",
 	17: "RGB(20, 20, 20)",
@@ -102,13 +104,24 @@ var Palette = {
 	190: "RGB(32, 65, 0)",
 	191: "RGB(16, 65, 0)",
 	192: "RGB(0, 65, 0)"
-	//: "RGB(, , )",
+}
+
+onkeydown = function (e) {
+	var keyCode = e.keyCode;
+	if ([8].indexOf(keyCode) > -1) {
+		e.preventDefault()
+	}
+	if (INKEY$Queue.length) {
+		INKEY$Queue[INKEY$Queue.length - 1](keyCode);
+	}
 }
 
 function error () {
+	console.log.apply(console, arguments)
 	alert("Illegal function call")
 }
 
+// This is "Box Fill", which is included in LINE calls. Just needs to be set so undefined errors don't get thrown.
 this.BF = "BF"
 this.TIMER = undefined
 
@@ -123,7 +136,7 @@ this.CHDIR = function (chdir) {
 }
 
 this.CHR$ = function (keyCode) {
-	return keyCode
+	return Number(keyCode)
 }
 
 this.CLEAR = function () {
@@ -145,11 +158,15 @@ this.COLOR = function (color) {
 	if (color in Palette) {
 		textColor = color
 	} else {
-		error()
+		error("Unknown color: ", color)
 	}
 }
 
 this.DEFINT = function () {
+}
+
+this.EXIT = function (msg) {
+	INKEY$Queue.pop()
 }
 
 this.GET = function (x, y, width, height) {
@@ -157,12 +174,32 @@ this.GET = function (x, y, width, height) {
 	return context.getImageData(x, y, width, height)
 }
 
+this.BEEP = function () {
+	alert("BEEP!")
+}
+
+this.EOF = function (index) {
+	return Boolean(fileLines[index].length)
+}
+
+this.INKEY$ = function (callback) {
+	INKEY$Queue.push(callback)
+}
+
 this.INPUT = function (index) {
-	return fileLines[filePointers[index]++]
+	return fileLines[index][filePointers[index]++]
+}
+
+this.INT = function (num) {
+	return parseInt(num)
 }
 
 this.LEFT$ = function (str, len) {
 	return str.substr(0, len)
+}
+
+this.RIGHT$ = function (str, len) {
+	return str.substr(str.length - 1 - len, str.length - 1)
 }
 
 this.LEN = function (msg) {
@@ -170,12 +207,13 @@ this.LEN = function (msg) {
 }
 
 this.LINE = function (x1, y1, x2, y2, color, type) {
-	//LINE(a, d, a + 15, d + 15, 0, BF); break
+	if (!context) return
 	context.save()
 	switch (type) {
 		case this.BF:
 			context.fillStyle = Palette[color]
-			context.fillRect(x1, y1, x2 - x1, y2 - y1)
+			//context.fillRect(x1, y1, x2 - x1, y2 - y1)
+			context.fillRect(x1 - 1, y1 - 1, x2 - x1 - 1, y2 - y1 - 1)
 			break
 	}
 	context.restore()
@@ -214,6 +252,7 @@ this.PALETTE = function (index, r, g, b) {
 
 this.PSET = function (x, y, color) {
 //console.log("PSET()", arguments);
+	if (!context) return
 	context.save()
 	color = Number(color)
 	if (color in Palette) {
@@ -228,7 +267,7 @@ console.log("### couldn't find:", color)
 
 this.PUT = function (x, y, image) {
 //console.log("PUT()", arguments);
-	context.putImageData(image, x, y)
+	if (context) context.putImageData(image, x, y)
 }
 
 this.PRINT = function (msg) {
@@ -258,6 +297,10 @@ this.RANDOMIZE = function () {
 	// Not supported
 }
 
+this.RND = function () {
+	return Math.random()
+}
+
 this.SCREEN = function (screen) {
 //console.log("SCREEN()", arguments);
 	if (canvas === undefined) {
@@ -268,7 +311,11 @@ this.SCREEN = function (screen) {
 
 	switch (screen) {
 		case 0:
-			document.body.removeChild(canvas)
+			if (canvas) {
+				document.body.removeChild(canvas)
+				canvas = undefined
+				context = undefined
+			}
 			break
 		case 9:
 			canvasWidth = 640
@@ -279,10 +326,15 @@ this.SCREEN = function (screen) {
 			canvasHeight = 200
 			break
 	}
-	canvas.width = canvasWidth
-	canvas.height = canvasHeight
-	canvas.style.width = canvasWidth * 3 + "px"
-	canvas.style.height = canvasHeight * 3 + "px"
+
+	if (canvas) {
+		canvas.width = canvasWidth
+		canvas.height = canvasHeight
+		if (screen == 13) { // TODO: remove
+			canvas.style.width = canvasWidth * 2 + "px"
+			canvas.style.height = canvasHeight * 2 + "px"
+		}
+	}
 	this.CLS()
 }
 
@@ -295,6 +347,7 @@ this.STRING$ = function (len, chr) {
 }
 
 this.SYSTEM = function () {
+	onkeydown = function () {}
 	SCREEN(0)
 }
 

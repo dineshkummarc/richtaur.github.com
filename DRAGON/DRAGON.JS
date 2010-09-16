@@ -269,14 +269,14 @@ var TalkExpedition, TNT
 var BurgDoorInn, BurgDoorShop
 var CdaleDoorInn, CdaleDoorChest, CdaleDoorGate
 
-Init()
-
-GetGraphics(function () {
-	GetName(1, function () {
-		LoadMap(function () {
-			DrawScreen(TRUE)
-			SetStats()
-			Main()
+Init(function () {
+	GetGraphics(function () {
+		GetName(1, function () {
+			LoadMap(function () {
+				DrawScreen(TRUE)
+				SetStats()
+				Main()
+			})
 		})
 	})
 })
@@ -293,7 +293,7 @@ console.log('ErrorCatch: ', ERR);
 	PRINT("Error!")
 	getch(function () {
 		CLS()
-		COLOR(7); PRINT("ERROR"+ ERR)
+		COLOR(7); PRINT("ERROR "+ ERR)
 		switch (ERR) {
 			case 6:
 				PRINT("There has been an overflow in DRAGON.")
@@ -324,14 +324,14 @@ console.log('ErrorCatch: ', ERR);
 	})
 }
 
-function About (a) {
+function About (a, callback) {
 
 	CLS()
 	COLOR(9)
 
 	PRINT("              DRAGONIER               ")
 	PRINT()
-	PRINT("    You have ran Dragonier"+ a+ "times.")
+	PRINT("    You have ran Dragonier "+ a+ " times.")
 	LOCATE(5, 1)
 	PRINT("ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
 	PRINT("³                                      ³")
@@ -342,31 +342,30 @@ function About (a) {
 	PRINT("³                                      ³")
 	PRINT("ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ")
 
-/*
-place = 1: GOSUB PutAbout
+	var place = 1; PutAbout()
 
-PlayWave "MATT"
+	PlayWave("MATT")
 
-DO
-SELECT CASE INKEY$
-CASE UKEY$
-IF place > 1 THEN place = place - 1
-GOSUB PutAbout
-CASE DKEY$
-IF place < 37 THEN place = place + 1
-GOSUB PutAbout
-'CASE YB, XB, AB, BB: ERASE text$: EXIT SUB
-CASE SPACEKEY$, ENTERKEY$: ERASE text$: EXIT SUB
-END SELECT
-LOOP
+	INKEY$(function (kbhit$) {
+		switch (kbhit$) {
+			case UKEY$:
+				if (place > 1) place = place - 1
+				PutAbout(); break
+			case DKEY$:
+				if (place < 37) place = place + 1
+				PutAbout(); break
+			//CASE YB, XB, AB, BB: ERASE text$: EXIT SUB
+			case SPACEKEY$: case ENTERKEY$: delete text$; EXIT('removing from about ...'); return callback()
+		}
+	})
 
-PutAbout:
-LOCATE 6, 2
-FOR i = place TO place + 5
-LOCATE , 2: PRINT text$(i)
-NEXT: RETURN
+	function PutAbout() {
+		LOCATE(6, 2)
+		for (var i = place; i <= place + 5; i++) {
+			LOCATE (undefined, 2); PRINT(text$[i])
+		}; return
+	}
 
-*/
 }
 
 function Arrow (ax, miny, maxy, aclr, callback) {
@@ -374,87 +373,83 @@ function Arrow (ax, miny, maxy, aclr, callback) {
 	var cry = miny
 	COLOR(aclr); LOCATE(cry, ax); PRINT(">")
 
-	onkeydown = function (INKEY$) {
-		var kbhit$ = INKEY$.keyCode
+	INKEY$(function (kbhit$) {
 		if (kbhit$ != "") {
 			COLOR(0); LOCATE(cry, ax); PRINT(">")
 			switch (kbhit$) {
-				case UKEY$: if (cry > miny) cry = cry - 1; else cry = maxy
-					break
-				case DKEY$: if (cry < maxy) cry = cry + 1; else cry = miny
-					break
-				case ENTERKEY$: case SPACEKEY$: return callback(cry)
-				case ESCAPEKEY$: return callback(FALSE)
+				case UKEY$: if (cry > miny) cry = cry - 1; else cry = maxy; break
+				case DKEY$: if (cry < maxy) cry = cry + 1; else cry = miny; break
+				case ENTERKEY$: case SPACEKEY$: EXIT(); return callback(cry)
+				case ESCAPEKEY$: EXIT(); return callback(FALSE)
 			}
 			COLOR(aclr); LOCATE(cry, ax); PRINT(">")
 		}
-	}
+	})
 
 }
 
 function Battle () {
  
 /*
-DO
-	GetMoves
-	CLS
-	DrawBattle
-	DoBattle
-LOOP WHILE BattleStatus = NONE
+	DO
+		GetMoves
+		CLS
+		DrawBattle
+		DoBattle
+	LOOP WHILE BattleStatus = NONE
 
-SELECT CASE BattleStatus
-	CASE FLEE: COLOR 15: Message "You fled the scenario!": Pause
-	CASE WON: WonBattle
-END SELECT
-
-CLS
-SetStats
-DrawScreen (TRUE)
 */
+	switch (BattleStatus) {
+		case FLEE: COLOR(15); Message("You fled the scenario!"); Pause(); break
+		case WON: WonBattle(); break
+	}
+
+	CLS()
+	SetStats()
+	DrawScreen(TRUE)
 
 }
 
-/*
-FUNCTION BattleItems (plib)
+function BattleItems (plib) {
       
- COLOR 15
- LOCATE 4, 1:  CALL Box(11, 23)
- LOCATE 12, 4: PRINT "INVENTORY"
- LOCATE 22, 4: PRINT " Exit"
- ass = 13
- FOR n = 1 TO NUMITEMS
- IF item(n).amount > 0 THEN
- LOCATE ass, 5
- PRINT item(n).label$; item(n).amount
- item(n).itemcol = ass
- ass = ass + 1
- ELSE
- item(n).itemcol = 1
- END IF
- NEXT
+	COLOR(15)
+	LOCATE(4, 1);  Box(11, 23)
+	LOCATE(12, 4); PRINT(">INVENTORY")
+	LOCATE(22, 4); PRINT(" Exit")
+	var ass = 13
+	for (var n = 1; n <= NUMITEMS; n++) {
+		if (item[n].amount > 0) {
+			LOCATE(ass, 5)
+			PRINT(item[n].label$ + " " + item[n].amount)
+			item[n].itemcol = ass
+			ass = ass + 1
+		} else {
+			item[n].itemcol = 1
+		}
+	}
 
- choice = Arrow(4, 13, 22, 9)
- SELECT CASE choice
-  CASE FALSE, 22: BattleItems = FALSE: EXIT FUNCTION
-  CASE ELSE
-   LOCATE 18, 1: COLOR 15
-   FOR m = 1 TO NUMITEMS
-    IF choice = item(m).itemcol THEN
-     IF m > 10 THEN
-      player(plib).action = m
-      DrawBattle
-      Message item(player(plib).action).label$
-      IF ChooseTarget(plib, GOOD) = FALSE THEN BattleItems = FALSE: EXIT FUNCTION
-      BattleItems = TRUE: EXIT FUNCTION
-     ELSE
-      PlayWave "BEEP"
-     END IF
-    END IF
-   NEXT
- END SELECT
+	Arrow(4, 13, 22, 9, function (choice) {
+		switch (choice) {
+			case FALSE: case 22: EXIT(); return FALSE
+			default:
+				LOCATE(18, 1); COLOR(15)
+				for (var m = 1; m <= NUMITEMS; m++) {
+					if (choice = item[m].itemcol) {
+						if (m > 10) {
+							player[plib].action = m
+							DrawBattle()
+							Message(item[player[plib].action].label$)
+							if (ChooseTarget(plib, GOOD) == FALSE) EXIT(); return FALSE
+							EXIT(); return TRUE
+						} else {
+							PlayWave("BEEP")
+						}
+					}
+				}
+		}
+	})
 
-END FUNCTION
-*/
+}
 
 function Box (startx, endx) {
 	LOCATE(startx, 1); PRINT(TAB(3)+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
@@ -463,74 +458,73 @@ function Box (startx, endx) {
 	LOCATE(endx, 1); PRINT(TAB(3)+ "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ")
 }
 
-/*
-SUB Cast (caster, sspell)
+function Cast (caster, sspell) {
 
- COLOR 15
+	COLOR(15)
 
- player(caster).mp = player(caster).mp - spell(caster, sspell).cost
+	player[caster].mp = player[caster].mp - spell[caster, sspell].cost
 
- SELECT CASE sspell
-  CASE 1
-   Message "BLAST"
-   i2 = player(caster).y: ig = 1
-   FOR i = player(caster).x TO foe(player(caster).target).x STEP -3
-    ass = ran(1, 2): ig = ig + 1
-    IF ran(0, 1) THEN ass = -ass
-    CIRCLE (i, i2 + ass), ran(3, 13) + ig, ran(41, 44)
-   NEXT i
-   'damage = (ran(@, @)
-   IF damage < 0 THEN damage = 0
-   CALL DoDamage(BAD, player(caster).target, damage)
+	switch (sspell) {
+		case 1:
+			Message("BLAST")
+			var i2 = player[caster].y; var ig = 1
+			for (var i = player[caster].x; i <= foe[player[caster].target].x; i -= 3) {
+				var ass = ran(1, 2); ig = ig + 1
+				if (ran(0, 1)) ass = -ass
+				CIRCLE(i, i2 + ass, ran(3, 13) + ig, ran(41, 44))
+			} // i
+			//damage = (ran(@, @)
+			if (damage < 0) damage = 0
+			DoDamage(BAD, player(caster).target, damage); break
 
-  CASE 2
-   Message "HEAL"
-   FOR index = 1 TO 3
-    ig = 0
-    FOR i = start TO start - 25 STEP -1
-     ig = ig + 1
-     CIRCLE (ran(0, 25) + (player(player(caster).target).x - 5), ran(0, 25) + (player(player(caster).target).y - 5)), 1, 31
-    NEXT
-   NEXT index
-   player(player(caster).target).hp = player(player(caster).target).hp + (ran(0, player(caster).iq - 1) + 10)
-   IF player(player(caster).target).hp > player(player(caster).target).hpmax THEN player(player(caster).target).hp = player(player(caster).target).hpmax
-   Pause
+		case 2:
+			Message("HEAL")
+			for (var index = 1; index <= 3; index++) {
+				var ig = 0
+				for (var i = start; i <= start - 25; i--) {
+					ig = ig + 1
+					CIRCLE(ran(0, 25) + (player[player[caster].target].x - 5, ran(0, 25) + (player[player[caster].target].y - 5)), 1, 31)
+				}
+			} // index
+			player[player[caster].target].hp = player[player[caster].target].hp + (ran(0, player[caster].iq - 1) + 10)
+			if (player[player[caster].target].hp > player[player[caster].target].hpmax) player[player[caster].target].hp = player[player[caster].target].hpmax
+			Pause(); break
 
-  CASE 3
-   Message "BARRIER"
-   player(player(caster).target).state = BARRIER
-   Pause
+		case 3:
+			Message("BARRIER")
+			player[player[caster].target].state = BARRIER
+			Pause(); break
 
-  CASE 4
-   Message "HOLY FIRE"
-   damage = (player(caster).iq * player(caster).lv) - foe(player(caster).target).dp
-   foe(player(caster).target).ap = foe(player(caster).target).ap / 2
-   IF damage < 0 THEN damage = 0
-   CALL DoDamage(BAD, player(caster).target, damage)
+		case 4:
+			Message("HOLY FIRE")
+			damage = (player[caster].iq * player[caster].lv) - foe[player[caster].target].dp
+			foe[player[caster].target].ap = foe[player[caster].target].ap / 2
+			if (damage < 0) damage = 0
+			DoDamage(BAD, player[caster].target, damage); break
 
-  CASE 5
-   Message "TREMOR"
+		case 5:
+			Message("TREMOR"); break
 
-  CASE 6
-   Message "N U K E"
+		case 6:
+			Message("N U K E"); break
 
- END SELECT
+	}
 
-END SUB
+}
 
-SUB CastInv
+function CastInv () {
 
-END SUB
-*/
+}
 
 function center (ctext$, cline, cclr) {
 	if (cclr > -1) COLOR(cclr)
 	LOCATE(cline, 20 - (LEN(ctext$) / 2)); PRINT(ctext$)
 }
 
-/*
-FUNCTION ChooseTarget (pt, ttarget)
+function ChooseTarget (pt, ttarget) {
+console.log("ChooseTarget()");
 
+/*
  t = 1: ERASE back
 
  IF ttarget = BAD THEN
@@ -593,8 +587,8 @@ FUNCTION ChooseTarget (pt, ttarget)
   PUT (player(t).x, player(t).y), back, PSET
  END IF
 
-END FUNCTION
 */
+}
 
 function CleanUp () {
 	SCREEN(9)
@@ -611,23 +605,23 @@ function CleanUp () {
 function delay (deler, callback) {
 	setTimeout(callback, Math.min(Math.max(deler, 1), 20) * 100)
 }
+
+function DoBattle () {
+
+	for (var NextMove = 300; NextMove >= 1; NextMove--) {
+		for (var n = 1; n <= you.exist; n++) {
+			if (NextMove == player[n].dx) DoPlayerMove(n)
+			if (BattleStatus != NONE) ;//EXIT SUB
+		}
+		for (var n = 1; n <= map.num; n++) {
+			if (NextMove == foe[n].dx) DoFoeMove(n)
+			if (BattleStatus != NONE) ;//EXIT SUB
+		}
+	}
+
+}
+
 /*
-
-SUB DoBattle
-
- FOR NextMove = 300 TO 1 STEP -1
-  FOR n = 1 TO you.exist
-   IF NextMove = player(n).dx THEN DoPlayerMove (n)
-   IF BattleStatus <> NONE THEN EXIT SUB
-  NEXT
-  FOR n = 1 TO map.num
-   IF NextMove = foe(n).dx THEN DoFoeMove (n)
-   IF BattleStatus <> NONE THEN EXIT SUB
-  NEXT
- NEXT
-
-END SUB
-
 SUB DoDamage (forp, whi, ddamage)
 
  ERASE back
@@ -878,7 +872,6 @@ END SUB
 */
 
 function DrawFile (siz, drf$, callback) {
-//console.log("DrawFile()", arguments);
 	var xhr = new XMLHttpRequest()
 	xhr.open("GET", "DRAGON/" + drf$, false) // TODO
 	xhr.onreadystatechange = function() {
@@ -898,7 +891,7 @@ function DrawFile (siz, drf$, callback) {
 }
 
 function DrawScreen (dweh) {
-//console.log("DrawScreen()", arguments);
+console.log('DrawScreen()')
 	for (var a = -you.across; a <= you.across; a++) {
 		for (var d = -you.down; d <= you.down; d++) {
 			if (a == 0 && d == 0 && dweh == TRUE) { } else DrawTile(Number(you.x) + a, Number(you.y) + d, 10 + a, 6 + d)
@@ -912,7 +905,6 @@ function DrawScreen (dweh) {
 }
 
 function DrawTile (tx, ty, cx, cy) {
-//console.log(tx, ty, cx, cy)
 	var a = tile[cx][cy].x
 	var d = tile[cx][cy].y
 	if (tx in tile && ty in tile[tx]) {
@@ -969,26 +961,27 @@ function File (FileType, callback) {
 	var a$ = "DRAGON"
 	COLOR(15); LOCATE(4, 1)
 	PRINT(TAB(3)+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
-	PRINT(TAB(3)+ "³WHICH FILE?                      ³")
+	PRINT(TAB(3)+ "³>WHICH FILE?                      ³")
 	PRINT(TAB(3)+ "³  DRAGON1.SAV                     ³")
 	PRINT(TAB(3)+ "³  DRAGON2.SAV                     ³")
 	PRINT(TAB(3)+ "³  DRAGON3.SAV                     ³")
 	PRINT(TAB(3)+ "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ")
 
-	switch (Arrow(4, 6, 8, 9)) { // TODO: callback
-		case FALSE: return
-		case 6: a$ = a$ + "1"; break
-		case 7: a$ = a$ + "2"; break
-		case 8: a$ = a$ + "3"; break
-	}; a$ = a$ + ".SAV"
+	Arrow(4, 6, 8, 9, function (arrow) {
+		switch (arrow) {
+			case FALSE: return callback()
+			case 6: a$ = a$ + "1"; break
+			case 7: a$ = a$ + "2"; break
+			case 8: a$ = a$ + "3"; break
+		}; a$ = a$ + ".SAV"
 
-	LOCATE(5, 1); COLOR(15)
+		LOCATE(5, 1); COLOR(15)
 
-	if (FileType == 1) {
- 
-		PRINT(TAB(3)+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
-		PRINT(TAB(3)+ "³SAVING                           ³")
-		PRINT(TAB(3)+ "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ")
+		if (FileType == 1) {
+	 
+			PRINT(TAB(3)+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
+			PRINT(TAB(3)+ "³>SAVING                           ³")
+			PRINT(TAB(3)+ "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ")
  
 /*
   OPEN a$ FOR OUTPUT AS #1
@@ -1050,116 +1043,122 @@ function File (FileType, callback) {
   CLOSE : LOCATE 6, 1
 */
  
-		PRINT(TAB(3)+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
-		PRINT(TAB(3)+ "³SAVE                             ³")
-		PRINT(TAB(3)+ "³ Finished saving.  Hit any key... ³")
-		PRINT(TAB(3)+ "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ")
+			PRINT(TAB(3)+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
+			PRINT(TAB(3)+ "³>SAVE                             ³")
+			PRINT(TAB(3)+ "³ Finished saving.  Hit any key... ³")
+			PRINT(TAB(3)+ "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ")
 
-	}
+		}
 
-	if (FileType == 2) {
+		if (FileType == 2) {
+	 
+			PRINT(TAB(3)+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
+			PRINT(TAB(3)+ "³>LOADING                          ³")
+			PRINT(TAB(3)+ "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ")
+	 
+			OPEN(a$, 1, function () {
+				Crown = Number(INPUT(1))
+				MasterKey = Number(INPUT(1))
+				BurgDoorInn = Number(INPUT(1))
+				BurgDoorShop = Number(INPUT(1))
+				CdaleDoorInn = Number(INPUT(1))
+				CdaleDoorChest = Number(INPUT(1))
+				CdaleDoorGate = Number(INPUT(1))
+				TalkExpedition = Number(INPUT(1))
+				TNT = Number(INPUT(1))
+				you.x = Number(INPUT(1))
+				you.y = Number(INPUT(1))
+				you.across = Number(INPUT(1))
+				you.down = Number(INPUT(1))
+				you.gold = Number(INPUT(1))
+				you.steps = Number(INPUT(1))
+				you.battles = Number(INPUT(1))
+				you.exist = Number(INPUT(1))
+				you.mango = Number(INPUT(1))
+				you.pauser = Number(INPUT(1))
+				map.monsters = Number(INPUT(1))
+				map.level = Number(INPUT(1))
+				map.before = Number(INPUT(1))
+				map.occurance = Number(INPUT(1))
+				map.num = Number(INPUT(1))
+				map.area$ = INPUT(1)
+				for (var i = 1; i <= 3; i++) {
+					player[i].hp = Number(INPUT(1))
+					player[i].hpmax = Number(INPUT(1))
+					player[i].mp = Number(INPUT(1))
+					player[i].mpmax = Number(INPUT(1))
+					player[i].lv = Number(INPUT(1))
+					player[i].xp = Number(INPUT(1))
+					player[i].total = Number(INPUT(1))
+					player[i].st = Number(INPUT(1))
+					player[i].dx = Number(INPUT(1))
+					player[i].iq = Number(INPUT(1))
+					player[i].ap = Number(INPUT(1))
+					player[i].dp = Number(INPUT(1))
+					player[i].armor = Number(INPUT(1))
+					player[i].weapon = Number(INPUT(1))
+					player[i].state = Number(INPUT(1))
+					player[i].pname$ = INPUT(1)
+				}
+				for (var p = 1; p <= 3; p++) {
+					for (var s = 1; s <= 6; s++) {
+						spell[p][s].own = Number(INPUT(1))
+					}
+				}
+				for (var i = 1; i <= NUMITEMS; i++) {
+					item[i].amount = Number(INPUT(1))
+				}
+				for (var a = 1; a <= 50; a++) {
+					for (var d = 1; d <= 50; d++) {
+						tile[a][d].style = Number(INPUT(1))
+				}; }
+			}) ;  LOCATE(6, 1)
  
-		PRINT(TAB(3)+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
-		PRINT(TAB(3)+ "³LOADING                          ³")
-		PRINT(TAB(3)+ "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ")
- 
-/*
-  OPEN a$ FOR INPUT AS #1
-   INPUT #1, Crown
-   INPUT #1, MasterKey
-   INPUT #1, BurgDoorInn
-   INPUT #1, BurgDoorShop
-   INPUT #1, CdaleDoorInn
-   INPUT #1, CdaleDoorChest
-   INPUT #1, CdaleDoorGate
-   INPUT #1, TalkExpedition
-   INPUT #1, TNT
-   INPUT #1, you.x
-   INPUT #1, you.y
-   INPUT #1, you.across
-   INPUT #1, you.down
-   INPUT #1, you.gold
-   INPUT #1, you.steps
-   INPUT #1, you.battles
-   INPUT #1, you.exist
-   INPUT #1, you.mango
-   INPUT #1, you.pauser
-   INPUT #1, map.monsters
-   INPUT #1, map.level
-   INPUT #1, map.before
-   INPUT #1, map.occurance
-   INPUT #1, map.num
-   INPUT #1, map.area$
-   FOR i = 1 TO 3
-    INPUT #1, player(i).hp
-    INPUT #1, player(i).hpmax
-    INPUT #1, player(i).mp
-    INPUT #1, player(i).mpmax
-    INPUT #1, player(i).lv
-    INPUT #1, player(i).xp
-    INPUT #1, player(i).total
-    INPUT #1, player(i).st
-    INPUT #1, player(i).dx
-    INPUT #1, player(i).iq
-    INPUT #1, player(i).ap
-    INPUT #1, player(i).dp
-    INPUT #1, player(i).armor
-    INPUT #1, player(i).weapon
-    INPUT #1, player(i).state
-    INPUT #1, player(i).pname$
-   NEXT
-   FOR p = 1 TO 3
-    FOR s = 1 TO 6
-     INPUT #1, spell(p, s).own
-    NEXT
-   NEXT
-   FOR i = 1 TO NUMITEMS
-    INPUT #1, item(i).amount
-   NEXT
-   FOR a = 1 TO 50
-   FOR d = 1 TO 50
-    INPUT #1, tile(a, d).style
-   NEXT: NEXT
-  CLOSE :  LOCATE 6, 1
-*/
- 
-		PRINT(TAB(3)+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
-		PRINT(TAB(3)+ "³LOAD                             ³")
-		PRINT(TAB(3)+ "³ Finished loading.  Hit any key...³")
-		PRINT(TAB(3)+ "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ")
+			PRINT(TAB(3)+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
+			PRINT(TAB(3)+ "³>LOAD                             ³")
+			PRINT(TAB(3)+ "³ Finished loading.  Hit any key...³")
+			PRINT(TAB(3)+ "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ")
 
-	}
-	getch(function () {
-		DrawScreen(TRUE)
-		callback()
+		}
+		getch(function () {
+			DrawScreen(TRUE)
+			callback()
+		})
+	})
+}
+
+function Fishery () {
+	COLOR(9)
+	Message("Welcome to my Fishery, youngin!"); getch(function () {
+		YesNo("Would you like to buy a fish for 50? <Y/N>", function (result) {
+			if (result == TRUE) {
+				if (you.gold >= 50) {
+					you.gold = you.gold - 50
+					item[14].amount = item[14].amount + 1
+					ThankYou(4, done)
+				} else {
+					PlayWave("BEEP")
+					done()
+				}
+			}
+			function done () {
+				if (ran(0, 24) == 0) {
+					Message("Well here's a fish anyway!")
+					PlayWave("TUNE")
+					item[14].amount = item[14].amount + 1
+				} else {
+					Message("Oh well...")
+				}
+				Pause(function () {
+					CLS()
+					DrawScreen(TRUE)
+				})
+			}
+		})
 	})
 }
 
 /*
-SUB Fishery
-COLOR 9
-Message "Welcome to my Fishery, youngin!": getch
-IF YesNo("Would you like to buy a fish for 50? <Y/N>") = TRUE THEN
- IF you.gold >= 50 THEN
-  you.gold = you.gold - 50
-  item(14).amount = item(14).amount + 1
-  ThankYou (4)
- ELSE
-  PlayWave "BEEP"
- END IF
-END IF
-IF ran(0, 24) = 0 THEN
- Message "Well here's a fish anyway!"
- PlayWave "TUNE"
- item(14).amount = item(14).amount + 1
-ELSE
- Message "Oh well..."
-END IF
-Pause
-CLS
-DrawScreen (TRUE)
-END SUB
-
 SUB Flicker (flx, fly, fls)
 
  ERASE back
@@ -1192,31 +1191,29 @@ SUB GameOver
  FOR i = 193 TO 243
   delay (50)
   CALL center("ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿", 9, i)
-  CALL center("³DRAGONIER                        ³", 10, i)
+  CALL center("³>DRAGONIER                        ³", 10, i)
   CALL center("³ May 1996 by Matthew Hackett      ³", 11, i)
   CALL center("ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ", 12, i)
  NEXT
  FOR i = 233 TO 193 STEP -1
   delay (50)
   CALL center("ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿", 9, i)
-  CALL center("³DRAGONIER                        ³", 10, i)
+  CALL center("³>DRAGONIER                        ³", 10, i)
   CALL center("³ May 1996 by Matthew Hackett      ³", 11, i)
   CALL center("ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ", 12, i)
  NEXT: QuitGame
 
 END SUB
+*/
 
-*/
 function getch (callback) {
-	onkeydown = callback
-/*
-DO
-LOOP WHILE INKEY$ = ""
-*/
+	INKEY$(function () {
+		EXIT()
+		callback()
+	})
 }
 
 function GetGraphics (callback) {
-console.log("GetGraphics()", arguments);
 
 	CLS() ; center("Initializing graphics...", 11, 15)
 
@@ -1235,6 +1232,7 @@ console.log("GetGraphics()", arguments);
 		}
 
 /*
+TODO
 file = "DARKLORD.HUG"
 DrawFile(64, file, function () {
 });
@@ -1324,20 +1322,18 @@ function GetInput$ (gx, gy, length, gerase$, callback) {
 
 	var a$ = ""
 
-	onkeydown = function (INKEY$) {
+	INKEY$(function (kbhit$) {
 
-		var kbhit$ = INKEY$.keyCode
 		if (kbhit$ != "") {
 			switch (kbhit$) {
-				case 13: onkeydown = function () {}; /* TODO */callback(a$); break
+				case 13: EXIT(); return callback(a$)
 				case 8:
-					if (LEN(a$) > 0) { a$ = LEFT$(a$, LEN(a$) - 1); LOCATE(gx, gy + LEN(a$)); PRINT(gerase$) }
-					INKEY$.preventDefault(); break
+					if (LEN(a$) > 0) { a$ = LEFT$(a$, LEN(a$) - 1); LOCATE(gx, gy + LEN(a$)); PRINT(gerase$) }; break
 				case 65: case 66: case 67: case 68: case 69: case 70: case 71: case 72: case 73: case 74: case 75: case 76: case 77: case 78: case 79: case 80: case 81: case 82: case 83: case 84: case 85: case 86: case 87: case 88: case 89: case 90: case 97: case 98: case 99: case 100: case 101: case 102: case 103: case 104: case 105: case 106: case 107: case 108: case 109: case 110: case 111: case 112: case 113: case 114: case 115: case 116: case 117: case 118: case 119: case 120: case 121: case 122:
 					if (LEN(a$) < 10) a$ += String.fromCharCode(kbhit$).toUpperCase(); break
 			}; LOCATE(gx, gy); PRINT(a$)
 		}
-	}
+	})
 
 }
 
@@ -1391,7 +1387,6 @@ NEXT
 }
 
 function GetName (index, callback) {
-console.log("GetName")
 
 	CLS() ; COLOR(15)
 	PRINT()
@@ -1420,11 +1415,11 @@ console.log("GetName")
 
 }
 
+function GetPlayer (p) {
+	COLOR(15)
+	switch (p) {
 /*
-SUB GetPlayer (p)
-COLOR 15
-SELECT CASE p
-CASE 2
+case 2:
  a$ = "Greetings, " + player(1).pname$
  Message a$: Pause
  Message "I have heard of you and your  exploits...": Pause
@@ -1463,7 +1458,9 @@ CASE 2
  Message "has explosives to break the   West Cave barrier!": Pause
  GetName (p)
 CASE 3
-END SELECT
+*/
+}
+/*
 ExitGetP:
  IF p = 2 THEN tile(39, 10).style = 1
  '@IF p = 3 THEN
@@ -1473,11 +1470,10 @@ ExitGetP:
  PlayWave "TUNE"
  CLS
  DrawScreen (TRUE)
-END SUB
-
 */
-function Init () {
-console.log("Init()", arguments);
+}
+
+function Init (callback) {
 
 	try {
 
@@ -1510,7 +1506,9 @@ NEXT x
 C = INP(&H388)
 CALL WriteReg(&H4, &H60)
 CALL WriteReg(&H4, &H80)
-Success = FALSE
+*/
+	Success = FALSE
+/*
 IF (B AND &HE0) = &H0 THEN
 IF (C AND &HE0) = &HC0 THEN
 Success = TRUE
@@ -1547,50 +1545,42 @@ END IF
 		}
 		NumPlays = Number(INPUT(1))
 		NumPlays = NumPlays + 1
-	})
 
-	var xhr = new XMLHttpRequest()
-	xhr.open("GET", "DRAGON/" + "DRAGON.INI", false) // TODO
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState == 4) {
-			var line = 0
-			var lines = xhr.responseText.split("\n")
-			for (var i = 0; i < 11; i++) {
-				var cst = lines[line++]
-				var snm$ = lines[line++]
-				for (n = 1; n <= 3; n++) {
+		OPEN("DRAGON.INI", 1, function() {
+			for (var i = 1; i <= 11; i++) {
+				var cst = Number(INPUT(1))
+				var snm$ = INPUT(1)
+				for (var n = 1; n <= 3; n++) {
 					spell[n][i].cost = cst
 					spell[n][i].spellname$ = snm$
 				}
 			}
 			for (var i = 0; i <= NUMITEMS; i++) {
-				item[i].label$ = lines[line++]
-				item[i].cost = lines[line++]
-				item[i].ap = lines[line++]
-				item[i].dp = lines[line++]
+				item[i].label$ = INPUT(1)
+				item[i].cost = Number(INPUT(1))
+				item[i].ap = Number(INPUT(1))
+				item[i].dp = Number(INPUT(1))
 			}
 			for (var i = 1; i <= NUMFILES; i++) {
-				GFiles$[i] = lines[line++]
+				GFiles$[i] = INPUT(1)
 			}
-		}
-	}
-	xhr.send()
+		})
 
-/*
-OPEN "FOE.DAT" FOR INPUT AS #1
-FOR i = 0 TO 11
-INPUT #1, FoeStats(i).pname$
-INPUT #1, FoeStats(i).hp
-INPUT #1, FoeStats(i).xp
-INPUT #1, FoeStats(i).gold
-INPUT #1, FoeStats(i).ap
-INPUT #1, FoeStats(i).dp
-INPUT #1, FoeStats(i).dx
-INPUT #1, FoeStats(i).move
-INPUT #1, FoeStats(i).size
-NEXT
-CLOSE
-*/
+	})
+
+	OPEN("FOE.DAT", 1, function () {
+		for (var i = 0; i <= 11; i++) {
+			FoeStats[i].pname$ = INPUT(1)
+			FoeStats[i].hp = Number(INPUT(1))
+			FoeStats[i].xp = Number(INPUT(1))
+			FoeStats[i].gold = Number(INPUT(1))
+			FoeStats[i].ap = Number(INPUT(1))
+			FoeStats[i].dp = Number(INPUT(1))
+			FoeStats[i].dx = Number(INPUT(1))
+			FoeStats[i].move = Number(INPUT(1))
+			FoeStats[i].size = Number(INPUT(1))
+		}
+	})
 
 	//@Set default data (handy for play testing)
 	//@ Add player 2+3's stats...
@@ -1644,47 +1634,36 @@ CLOSE
 
 	CLS() ; COLOR(9)
 
-/*
-FOR i = 193 TO 230 STEP 2
-COLOR i
-*/
-LOCATE(1)
-PRINT()
-PRINT()
-PRINT()
-PRINT("ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»")
-PRINT("º       ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿        º")
-PRINT("º       ³  D R A G O N I E R  ³        º")
-PRINT("º       ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ        º")
-PRINT("º                                      º")
-PRINT("º           By Matt Hackett            º")
-PRINT("º                                      º")
-PRINT("º       All Artwork Provided By        º")
-PRINT("º           Michael Hackett            º")
-PRINT("º                                      º")
-PRINT("º       ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿        º")
-PRINT("º       ³   Hit A for About   ³        º")
-PRINT("º       ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ        º")
-PRINT("ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼")
-/*
-NEXT
+	for (var i = 193; i <= 230; i += 2) {
+		COLOR(i)
+		LOCATE(1)
+		PRINT()
+		PRINT()
+		PRINT()
+		PRINT("ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»")
+		PRINT("º       ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿        º")
+		PRINT("º       ³  D R A G O N I E R  ³        º")
+		PRINT("º       ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ        º")
+		PRINT("º                                      º")
+		PRINT("º           By Matt Hackett            º")
+		PRINT("º                                      º")
+		PRINT("º       All Artwork Provided By        º")
+		PRINT("º           Michael Hackett            º")
+		PRINT("º                                      º")
+		PRINT("º       ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿        º")
+		PRINT("º       ³   Hit A for About   ³        º")
+		PRINT("º       ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ        º")
+		PRINT("ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼")
+	}
 
- PlayWave "DRAGON"
+	PlayWave("DRAGON")
 
- DO
-  'Control = Joy
-  'IF Control > 0 THEN
-  ' IF Control = AB THEN About (NumPlays)
-  ' EXIT DO
-  'END IF
-  kbhit$ = INKEY$
-  IF kbhit$ <> "" THEN
-    About (NumPlays)
-    EXIT DO
-  END IF
- LOOP
- 
-*/
+	INKEY$(function (kbhit$) {
+		if (kbhit$ != "") {
+			EXIT()
+			About(NumPlays, callback)
+		}
+	})
 
 } catch (ERR) {
 	ErrorCatch(ERR)
@@ -1772,27 +1751,30 @@ console.log('InitBattle()', arguments)
 
 }
 
+function Inventory (callback) {
+console.log('Inventory()');
+
+	COLOR(15); LOCATE(3, 1)
+
+	PRINT(TAB(3)+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
+	PRINT(TAB(3)+ "³>INVENTORY                        ³")
+	PRINT(TAB(3)+ "³  Use                             ³")
+	PRINT(TAB(3)+ "³  Equip                           ³")
+	PRINT(TAB(3)+ "³  Drop                            ³")
+	PRINT(TAB(3)+ "³  Exit                            ³")
+	PRINT(TAB(3)+ "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ")
+
+	Arrow(4, 5, 8, 9, function (arrow) {
+		switch (arrow) {
+			case FALSE: ExitInventory(); break
+			case 5: UseItems(); break
+			case 6: EquipItem(); break
+			case 7: DropItem(); break
+			case 8: ExitInventory(); break
+		}
+	})
+
 /*
-SUB Inventory
-
- COLOR 15: LOCATE 3, 1
-
- PRINT TAB(3); "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿"
- PRINT TAB(3); "³INVENTORY                        ³"
- PRINT TAB(3); "³  Use                             ³"
- PRINT TAB(3); "³  Equip                           ³"
- PRINT TAB(3); "³  Drop                            ³"
- PRINT TAB(3); "³  Exit                            ³"
- PRINT TAB(3); "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ"
-
- SELECT CASE Arrow(4, 5, 8, 9)
-  CASE FALSE: GOTO ExitInventory
-  CASE 5: GOTO UseItems
-  CASE 6: GOTO EquipItem
-  CASE 7: GOTO DropItem
-  CASE 8: GOTO ExitInventory
- END SELECT
-
 PutInv:
 
  LOCATE 4, 1: COLOR 15
@@ -1899,27 +1881,34 @@ EquipItem:
    IF pp = 3 THEN PUT (152, 0), hero3, PSET
    END IF
  LOOP
+*/
 
-DropItem:
+	function DropItem () {
 
- GOSUB PutInv
+		PutInv()
 
- SELECT CASE Arrow(4, 6, 16, 9)
-  CASE FALSE: GOTO ExitInventory
-  CASE 16: GOTO ExitInventory
-  CASE ELSE
-   FOR it = 1 TO NUMITEMS
-    IF cry = item(it).itemcol THEN
-     item(it).amount = item(it).amount - 1
-     Message "Oops!"
-    END IF
-   NEXT
- END SELECT
+		Arrow(4, 6, 16, 9, function (arrow) {
+			switch (arrow) {
+				case FALSE: ExitInventory(); break
+				case 16: ExitInventory(); break
+				default:
+					for (var it = 1; it <= NUMITEMS; it++) {
+						if (cry == item[it].itemcol) {
+							item[it].amount = item[it].amount - 1
+							Message("Oops!")
+						}
+					}
+			}
+		})
+	}
 
-ExitInventory:
-DrawScreen (TRUE)
-END SUB
+	function ExitInventory () {
+		DrawScreen(TRUE)
+		callback()
+	}
+}
 
+/*
 FUNCTION Joy
 it = STICK(0)
 IF it <> NORM THEN Joy = it: EXIT FUNCTION
@@ -2083,10 +2072,9 @@ GiveLVbonus:
  ERASE pix
 
 END SUB
-
 */
+
 function LoadMap (callback) {
-console.log("LoadMap()", arguments);
 
 	CLS() ; center("Loading...", 12, 15)
 
@@ -2165,10 +2153,9 @@ function Location (lx, ly) {
 }
 
 function Main () {
-console.log("Main()", arguments);
-	onkeydown = function (INKEY$) {
+	INKEY$(function (key) {
 
-		switch (INKEY$.keyCode) {
+		switch (key) {
 			case ESCAPEKEY$:
 				COLOR(15)
 				YesNo("Quit Game? <Y/N>", function (result) {
@@ -2208,7 +2195,7 @@ console.log("Main()", arguments);
 				}; break
 		}
 
-	}
+	})
 }
 
 function Message (mes$) {
@@ -2282,7 +2269,7 @@ function Options () {
 	Arrow(4, 4, 12, 9, function (arrow) {
 		switch (arrow) {
 			case 4: Status(); break
-			case 5: Inventory(); break
+			case 5: Inventory(done); break
 			case 6: CastInv(); break
 			case 7: TestReturn(); break
 			case 8:
@@ -2302,8 +2289,10 @@ function Options () {
 					case 3: PRINT("FAST"); break
 				}; break
 		}
-		CLS()
-		DrawScreen(TRUE)
+		function done () {
+			CLS()
+			DrawScreen(TRUE)
+		}
 	})
 
 }
@@ -2319,10 +2308,10 @@ function Pause (callback) {
 
 function PlayWave (WFile$) {
 console.log('PlayWave()', arguments);
+
+	if (Success == TRUE) {
+
 /*
-
-IF Success = TRUE THEN
-
 DIM wav AS STRING * 2
 
 WFile$ = WFile$ + ".VOC"
@@ -2341,59 +2330,53 @@ WAIT DataPort, &H80, &HFF
 OUT DataPort, PEEK(SADD(C$))
 LOOP UNTIL EOF(1)
 CLOSE
-
-END IF
-
 */
+
+	}
+
 }
-/*
 
-FUNCTION PM (pmn)
-au = ran(1, pmn)
-rt = ran(0, 1)
-IF rt = 0 THEN au = -au
-PM = au
-END FUNCTION
+function PM (pmn) {
+	var au = ran(1, pmn)
+	var rt = ran(0, 1)
+	if (rt == 0) au = -au
+	return au
+}
 
-*/
 function QuitGame () {
-console.log("QuitGame()", arguments);
-/*
-CleanUp
-COLOR 9
-OPEN "TITLE.DAT" FOR INPUT AS #2
-DO
-INPUT #2, title$
-PRINT title$
-LOOP UNTIL EOF(2): CLOSE
-COLOR 7
-PlayWave "DRAGON"
-SYSTEM
-*/
+	CleanUp()
+	COLOR(9)
+	/*
+	OPEN "TITLE.DAT" FOR INPUT AS #2
+	DO
+		INPUT #2, title$
+		PRINT title$
+	LOOP UNTIL EOF(2): CLOSE
+	*/
+	COLOR(7)
+	PlayWave("DRAGON")
+	SYSTEM()
 }
 
 function ran (n1, n2) {
-	return parseInt(Math.random() * (n2 - (n1 - 1))) + n1
+	return INT(RND() * (n2 - (n1 - 1))) + n1
 }
 
 function RandTalk () {
-	console.log('RandTalk');
-/*
-t = ran(1, 10): LOCATE 3, 1: COLOR 15
-SELECT CASE t
-CASE 1: a$ = "Good day, warrior."
-CASE 2: a$ = "Be sure to stay away from the West Cave!"
-CASE 3: a$ = "I saw a shining light come    from the west.  It scared us.."
-CASE 4: a$ = "The wind in the North is gett ing too powerful..."
-CASE 5: a$ = "Go away -- you smell like my  dog."
-CASE 6: a$ = "Are you a man or a woman?  I  can't tell."
-CASE 7: a$ = "The reflex is a lonely child  just waiting by the park."
-CASE 8: a$ = "I have nothing to say to filth like yourself, scum."
-CASE 9: a$ = "Boy am I glad to see you!"
-CASE 10: a$ = "I really like your sword.  It gives me cramps."
-END SELECT
-COLOR 15: Message a$
-*/
+	var t = ran(1, 10); LOCATE(3, 1); COLOR(15)
+	switch (t) {
+		case 1: var a$ = "Good day, warrior."
+		case 2: var a$ = "Be sure to stay away from the West Cave!"; break
+		case 3: var a$ = "I saw a shining light come    from the west.  It scared us.."; break
+		case 4: var a$ = "The wind in the North is gett ing too powerful..."; break
+		case 5: var a$ = "Go away -- you smell like my  dog."; break
+		case 6: var a$ = "Are you a man or a woman?  I  can't tell."; break
+		case 7: var a$ = "The reflex is a lonely child  just waiting by the park."; break
+		case 8: var a$ = "I have nothing to say to filth like yourself, scum."; break
+		case 9: var a$ = "Boy am I glad to see you!"; break
+		case 10: var a$ = "I really like your sword.  It gives me cramps."; break
+	}
+	COLOR(15); Message(a$)
 }
 /*
 
@@ -2463,7 +2446,6 @@ END SUB
 
 */
 function SetStats () {
-//console.log("SetStats()", arguments);
 	for (var t = 1; t <= you.exist; t++) {
 		if (player[t].mp < 0) player[t].mp = 0
 		if (player[t].hp > player[t].hpmax) player[t].hp = player[t].hpmax
@@ -2807,116 +2789,121 @@ ExitWhore:
 CLS
 DrawScreen (TRUE)
 END SUB
-
-SUB Status
-
-FOR p = 1 TO you.exist
-
- CLS : COLOR 15
- IF player(p).state = DEATH THEN COLOR 4
- LOCATE 3
-
- IF p = 1 THEN PUT (152, 0), hero, PSET
- IF p = 2 THEN PUT (152, 0), hero2, PSET
- IF p = 3 THEN PUT (152, 0), hero3, PSET
-
- PRINT TAB(3); "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿"
- PRINT TAB(3); "³"; player(p).pname$
- PRINT TAB(3); "³"
- PRINT USING "  ³ HP ####/####"; player(p).hp; player(p).hpmax
- PRINT USING "  ³ MP ####/####"; player(p).mp; player(p).mpmax
- PRINT USING "  ³ LV ####"; player(p).lv
- PRINT TAB(3); "³"
- PRINT USING "  ³ XP ####/####"; player(p).total; player(p).xp
- PRINT USING "  ³   #########"; you.gold
- PRINT TAB(3); "³"
- PRINT TAB(3); "³ ST "; player(p).st
- PRINT TAB(3); "³ DX "; player(p).dx
- PRINT TAB(3); "³ IQ "; player(p).iq
- PRINT TAB(3); "³"
- PRINT TAB(3); "³ AP "; player(p).ap
- PRINT TAB(3); "³ DP "; player(p).dp
- PRINT TAB(3); "³"
- PRINT TAB(3); "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ"
-
- FOR i = 4 TO 19
-  LOCATE i, 40: PRINT "³"
- NEXT:  LOCATE 4
-
- LINE (100, 96)-(300, 102), 15, B
- LINE (100, 104)-(300, 110), 15, B
- LINE (100, 112)-(300, 118), 15, B
- LINE (101, 97)-(101 + player(p).st, 101), 4, BF
- LINE (101, 105)-(101 + player(p).dx, 109), 4, BF
- LINE (101, 113)-(101 + player(p).iq, 117), 4, BF
-
- LINE (100, 128)-(300, 134), 15, B
- LINE (100, 136)-(300, 142), 15, B
- LINE (101, 129)-(101 + player(p).ap, 133), 4, BF
- LINE (101, 137)-(101 + player(p).dp, 141), 4, BF
- getch
-
- CALL Box(4, 21): LOCATE 5, 4: PRINT "INVENTORY": ass = 7
-
- FOR it = 1 TO NUMITEMS
-  IF item(it).amount > 0 THEN
-   LOCATE ass, 5
-   PRINT item(it).label$; item(it).amount
-   ass = ass + 1
-  END IF
- NEXT
-
- getch
-
- CALL Box(5, 21)
- LOCATE 6, 4: PRINT "MAGIC": ass = 8
-
- FOR i = 1 TO 6
-  IF spell(p, i).own = TRUE THEN
-   LOCATE ass, 5
-   PRINT spell(p, i).spellname; spell(p, i).cost
-   ass = ass + 1
-  END IF
- NEXT
-
- LOCATE 6: getch
-
- PRINT TAB(3); "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿"
- PRINT TAB(3); "³STATISTICS                         ³"
- PRINT TAB(3); "³                                    ³"
- PRINT TAB(3); "³ Weapon:                            ³"
- PRINT TAB(3); "³                                    ³"
- PRINT TAB(3); "³ Armor :                            ³"
- PRINT TAB(3); "³                                    ³"
- PRINT TAB(3); "³ Total Experience:                  ³"
- PRINT TAB(3); "³                                    ³"
- PRINT TAB(3); "³ Til Next Level  :                  ³"
- PRINT TAB(3); "³                                    ³"
- PRINT TAB(3); "³ Battles:                           ³"
- PRINT TAB(3); "³                                    ³"
- PRINT TAB(3); "³ Steps  :                           ³"
- PRINT TAB(3); "³                                    ³"
- PRINT TAB(3); "³ Mango  :                           ³"
- PRINT TAB(3); "³                                    ³"
- PRINT TAB(3); "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ"
-
- LOCATE 9, 13: PRINT item(player(p).weapon).label$
- LOCATE 11, 13: PRINT item(player(p).armor).label$
- LOCATE 13, 23: PRINT player(p).total
- LOCATE 15, 23: PRINT player(p).xp
- LOCATE 17, 14: PRINT you.battles
- LOCATE 19, 14: PRINT you.steps
- LOCATE 21, 14: PRINT you.mango
-
- getch
-
-NEXT
-
-CLS : DrawScreen (TRUE)
-
-END SUB
-
 */
+
+function Status () {
+
+	for (var p = 1; p <= you.exist; p++) {
+
+		CLS() ; COLOR(15)
+		if (player[p].state == DEATH) COLOR(4)
+		LOCATE(3)
+
+		if (p == 1) PUT(152, 0, hero, PSET)
+		if (p == 2) PUT(152, 0, hero2, PSET)
+		if (p == 3) PUT(152, 0, hero3, PSET)
+
+		PRINT(TAB(3)+" "+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
+		PRINT(TAB(3)+" "+ "³"+" "+ player(p).pname$)
+		PRINT(TAB(3)+" "+ "³")
+	/*
+		PRINT(USING "  ³ HP ####/####"+ player(p).hp+" "+ player(p).hpmax)
+		PRINT(USING "  ³ MP ####/####"; player(p).mp;+" "+ player(p).mpmax)
+		PRINT(USING "  ³ LV ####";+" "+ player(p).lv)
+	*/
+		PRINT(TAB(3)+" "+ "³")
+	/*
+		PRINT(USING "  ³ XP ####/####"; player(p).total; player(p).xp)
+		PRINT(USING "  ³   #########"; you.gold)
+	*/
+		PRINT(TAB(3)+" "+ "³")
+		PRINT(TAB(3)+" "+ "³ ST "+" "+ player[p].st)
+		PRINT(TAB(3)+" "+ "³ DX "+" "+ player[p].dx)
+		PRINT(TAB(3)+" "+ "³ IQ "+" "+ player[p].iq)
+		PRINT(TAB(3)+" "+ "³")
+		PRINT(TAB(3)+" "+ "³ AP "+" "+ player[p].ap)
+		PRINT(TAB(3)+" "+ "³ DP "+" "+ player[p].dp)
+		PRINT(TAB(3)+" "+ "³")
+		PRINT(TAB(3)+" "+ "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ")
+
+		for (var i = 4; i <= 19; i++) {
+			LOCATE(i, 40); PRINT("³")
+		};  LOCATE(4)
+
+		LINE(100, 96, 300, 102, 15, B)
+		LINE(100, 104, 300, 110, 15, B)
+		LINE(100, 112, 300, 118, 15, B)
+		LINE(101, 97, 101 + player[p].st, 101, 4, BF)
+		LINE(101, 105, 101 + player[p].dx, 109, 4, BF)
+		LINE(101, 113, 101 + player[p].iq, 117, 4, BF)
+
+		LINE(100, 128, 300, 134, 15, B)
+		LINE(100, 136, 300, 142, 15, B)
+		LINE(101, 129, 101 + player[p].ap, 133, 4, BF)
+		LINE(101, 137, 101 + player[p].dp, 141, 4, BF)
+		getch()
+
+		Box(4, 21); LOCATE(5, 4); PRINT("INVENTORY"); var ass = 7
+
+		for (var it = 1; it <= NUMITEMS; it++) {
+			if (item[it].amount > 0) {
+				LOCATE(ass, 5)
+				PRINT(item[it].label$+" "+ item[it].amount)
+				ass = ass + 1
+			}
+		}
+
+		getch()
+
+		Box(5, 21)
+		LOCATE(6, 4); PRINT("MAGIC"); ass = 8
+
+		for (var i = 1; i <= 6; i++) {
+			if (spell[p][i].own == TRUE) {
+				LOCATE(ass, 5)
+				PRINT(spell[p][i].spellname+" "+ spell[p][i].cost)
+				ass = ass + 1
+			}
+		}
+
+		LOCATE(6); getch(function () {
+
+			PRINT(TAB(3)+" "+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
+			PRINT(TAB(3)+" "+ "³STATISTICS                         ³")
+			PRINT(TAB(3)+" "+ "³                                    ³")
+			PRINT(TAB(3)+" "+ "³ Weapon:                            ³")
+			PRINT(TAB(3)+" "+ "³                                    ³")
+			PRINT(TAB(3)+" "+ "³ Armor :                            ³")
+			PRINT(TAB(3)+" "+ "³                                    ³")
+			PRINT(TAB(3)+" "+ "³ Total Experience:                  ³")
+			PRINT(TAB(3)+" "+ "³                                    ³")
+			PRINT(TAB(3)+" "+ "³ Til Next Level  :                  ³")
+			PRINT(TAB(3)+" "+ "³                                    ³")
+			PRINT(TAB(3)+" "+ "³ Battles:                           ³")
+			PRINT(TAB(3)+" "+ "³                                    ³")
+			PRINT(TAB(3)+" "+ "³ Steps  :                           ³")
+			PRINT(TAB(3)+" "+ "³                                    ³")
+			PRINT(TAB(3)+" "+ "³ Mango  :                           ³")
+			PRINT(TAB(3)+" "+ "³                                    ³")
+			PRINT(TAB(3)+" "+ "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ")
+
+			LOCATE(9, 13); PRINT(item[player[p].weapon].label$)
+			LOCATE(11, 13); PRINT(item[player[p].armor].label$)
+			LOCATE(13, 23); PRINT(player[p].total)
+			LOCATE(15, 23); PRINT(player[p].xp)
+			LOCATE(17, 14); PRINT(you.battles)
+			LOCATE(19, 14); PRINT(you.steps)
+			LOCATE(21, 14); PRINT(you.mango)
+		})
+
+		getch()
+
+	}
+
+	CLS() ; DrawScreen(TRUE)
+
+}
+
 function Surrounding (st) {
 	if (tile[you.x - 1][you.y].style == st) return TRUE
 	if (tile[you.x + 1][you.y].style == st) return TRUE
@@ -2926,7 +2913,7 @@ function Surrounding (st) {
 }
 
 function TestReturn () {
-console.log("TestReturn()", arguments);
+//console.log("TestReturn()", arguments);
 
 	COLOR(15)
 
@@ -2957,107 +2944,120 @@ console.log("TestReturn()", arguments);
 			if (Surrounding(43) == TRUE) Welcome()
 			if (Surrounding(44) == TRUE) {
 				if (TalkExpedition == TRUE && TNT == 0) {
-/*
-					Message "Howdy!  Yes Sorceress, I got  your message and I have your   TNT..."
-					Pause
-					Message "Here you are be happy!"
-*/
-					PlayWave("TUNE")
-					TNT = 1
+					Message("Howdy!  Yes Sorceress, I got  your message and I have your   TNT...")
+					Pause(function () {
+						Message("Here you are be happy!")
+						PlayWave("TUNE")
+						TNT = 1
+					})
 				} else {
-					//Message "Yeah go away."
+					Message("Yeah go away.")
 				}
 			}
+			if (Surrounding(45) == TRUE) RandTalk(); break
+		case 3:
+			if (Location(12, 24) == TRUE) {
+				if (CdaleDoorInn == 1) {
+					Message("You opened the door!"); Pause(function () {
+						CdaleDoorInn = 2
+						tile[12][23].style = 4
+						DrawScreen(TRUE)
+					})
+				}
+			}
+			if (Location(25, 27) == TRUE) {
+				if (CdaleDoorChest == 1) {
+					Message("You opened the door!"); Pause(function () {
+						CdaleDoorChest = 2
+						tile[24][27].style = 4
+						DrawScreen(TRUE)
+					})
+				}
+			}
+			if (Location(26, 15) == TRUE) {
+				if (CdaleDoorGate == 1) {
+					Message("You opened the door!"); Pause(function () {
+						CdaleDoorGate = 2
+						tile[26][14].style = 4
+						DrawScreen(TRUE)
+					})
+				}
+			}
+			if (Location(20, 16) == TRUE) ShopItem (3)
+			if (Location(30, 27) == TRUE) ShopWhore (50)
+			if (Surrounding(47) == TRUE) {
+				if (you.exist == 1) GetPlayer(2)
+			}
 			if (Surrounding(45) == TRUE) RandTalk()
-			break
-/*
-  CASE 3
-   IF Location(12, 24) = TRUE THEN
-    IF CdaleDoorInn = 1 THEN
-     Message "You opened the door!": Pause
-     CdaleDoorInn = 2
-     tile(12, 23).style = 4
-     DrawScreen (TRUE)
-    END IF
-   END IF
-   IF Location(25, 27) = TRUE THEN
-    IF CdaleDoorChest = 1 THEN
-     Message "You opened the door!": Pause
-     CdaleDoorChest = 2
-     tile(24, 27).style = 4
-     DrawScreen (TRUE)
-    END IF
-   END IF
-   IF Location(26, 15) = TRUE THEN
-    IF CdaleDoorGate = 1 THEN
-     Message "You opened the door!": Pause
-     CdaleDoorGate = 2
-     tile(26, 14).style = 4
-     DrawScreen (TRUE)
-    END IF
-   END IF
-   IF Location(20, 16) = TRUE THEN ShopItem (3)
-   IF Location(30, 27) = TRUE THEN ShopWhore (50)
-   IF Surrounding(47) = TRUE THEN
-    IF you.exist = 1 THEN GetPlayer (2)
-   END IF
-   IF Surrounding(45) = TRUE THEN RandTalk
-   IF Surrounding(50) = TRUE THEN COLOR 9: Message "Yes I AM a fish, you!"
-   IF Surrounding(44) = TRUE THEN
-    i = ran(0, 2)
-    IF i = 0 THEN Message "Hey baby - lookin' for a good time?"
-    IF i = 1 THEN Message "Want your cock sucked?"
-    IF i = 2 THEN Message "Ooh!  You lookin' fine, baby!"
-   END IF
-   IF Surrounding(49) = TRUE THEN
-    IF TalkExpedition = FALSE THEN
-     Message "Yep, last I hear the king went on an expedition lookin' for some": Pause
-     Message "gold or somethin' near that   cave up there..."
-     PlayWave "TUNE"
-     TalkExpedition = TRUE
-    ELSE
-     Welcome
-    END IF
-   END IF
-   IF Surrounding(46) = TRUE THEN Fishery
-  CASE 4
-   IF Location(36, 32) = TRUE THEN Search (10)
-   IF Surrounding(49) = TRUE THEN
-    COLOR 14
-    Message "Please help me!!": Pause
-    InitBattle (1)
-    COLOR 15
-    Message "JACK ran away!"
-    PlayWave "TUNE"
-    Pause
-    Message "You receive a key.": Pause
-    CdaleDoorGate = 1
-    item(15).amount = item(15).amount + 1
-    PlayWave "TUNE"
-    Message "Thank you for rescuing me!": Pause
-    Message "My name is Randall and I am King": Pause
-    Message "Rowan's personal servant.": Pause
-    Message "He went through the passage first": Pause
-    Message "and then the rest of us were": Pause
-    Message "ambushed by that creature.": Pause
-    Message "I am the only survivor...": Pause
-    Message "Well anyway come to the castle and": Pause
-    Message "I will reward you.  Thanks again!": Pause
-    tile(31, 40).style = 12
-    CLS
-    DrawScreen (TRUE)
-   END IF
-   IF Location(36, 42) = TRUE &&AND TNT = 1 THEN
-    TNT = 2
-    tile(36, 43).style = 12
-    tile(37, 43).style = 12
-    Message "YOU LAY THE BOMB!": Pause
-    FOR i = 1 TO 300
-     CIRCLE (160, 100), i, ran(193, 255)
-    NEXT: CLS : DrawScreen (TRUE)
-    Message "Whoa...that was close!": Pause: CLS : DrawScreen (TRUE)
-   END IF
-*/
+			if (Surrounding(50) == TRUE) COLOR(9); Message("Yes I AM a fish, you!")
+			if (Surrounding(44) == TRUE) {
+				var i = ran(0, 2)
+				if (i == 0) Message("Hey baby - lookin' for a good time?")
+				if (i == 1) Message("Want your cock sucked?")
+				if (i == 2) Message("Ooh!  You lookin' fine, baby!")
+			}
+			if (Surrounding(49) == TRUE) {
+				if (TalkExpedition == FALSE) {
+					Message("Yep, last I hear the king went on an expedition lookin' for some"); Pause(function () {
+						Message("gold or somethin' near that   cave up there...")
+						PlayWave("TUNE")
+						TalkExpedition = TRUE
+					})
+				} else {
+					Welcome()
+				}
+			}
+			if (Surrounding(46) == TRUE) Fishery(); break
+		case 4:
+			if (Location(36, 32) == TRUE) Search(10)
+			if (Surrounding(49) == TRUE) {
+				COLOR(14)
+				Message("Please help me!!"); Pause(function () {
+					InitBattle(1)
+					COLOR(15)
+					Message("JACK ran away!")
+					PlayWave("TUNE")
+					Pause(function () {
+						Message("You receive a key."); Pause(function () {
+							CdaleDoorGate = 1
+							item[15].amount = item[15].amount + 1
+							PlayWave("TUNE")
+							Message("Thank you for rescuing me!"); Pause(function () {
+								Message("My name is Randall and I am King"); Pause(function () {
+									Message("Rowan's personal servant."); Pause(function () {
+										Message("He went through the passage first"); Pause(function () {
+											Message("and then the rest of us were"); Pause(function () {
+												Message("ambushed by that creature."); Pause(function () {
+													Message("I am the only survivor..."); Pause(function () {
+														Message("Well anyway come to the castle and"); Pause(function () {
+															Message("I will reward you.  Thanks again!"); Pause(function () {
+																tile[31][40].style = 12
+																CLS()
+																DrawScreen(TRUE)
+															})
+														})
+													})
+												})
+											})
+										})
+									})
+								})
+							})
+						})
+					})
+				})
+			}
+			if (Location(36, 42) == TRUE && TNT == 1) {
+				TNT = 2
+				tile[36][43].style = 12
+				tile[37][43].style = 12
+				Message("YOU LAY THE BOMB!"); Pause(function () {
+					for (var i = 1; i <= 300; i++) {
+						CIRCLE(160, 100, i, ran(193, 255))
+					}; CLS() ; DrawScreen(TRUE)
+					Message("Whoa...that was close!"); Pause(function () { CLS() ; DrawScreen(TRUE) });
+				})
+			}; break
 	}
 }
 
@@ -3164,64 +3164,62 @@ function TestStep () {
 
 }
 
-/*
-SUB ThankYou (tyline)
+function ThankYou (tyline, callback) {
 
-COLOR 14: LOCATE tyline: rp = ran(1, 5)
+	COLOR(14); LOCATE(tyline); var rp = ran(1, 5)
 
-PRINT TAB(3); "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿"
-PRINT TAB(3); "³ YOU MADE A PURCHASE !           ³"
-PRINT TAB(3); "³                                  ³"
-PRINT TAB(3); "³                                  ³"
-PRINT TAB(3); "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ"
+	PRINT(TAB(3)+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
+	PRINT(TAB(3)+ "³> YOU MADE A PURCHASE !           ³")
+	PRINT(TAB(3)+ "³                                  ³")
+	PRINT(TAB(3)+ "³                                  ³")
+	PRINT(TAB(3)+ "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ")
 
-LOCATE tyline + 2, 5
+	LOCATE(tyline + 2, 5)
 
-SELECT CASE rp
- CASE 1: PRINT "Thank you!"
- CASE 2: PRINT "Please come again!"
- CASE 3: PRINT "Yeah thanks alot, scum."
- CASE 4: PRINT "Many thanks."
- CASE 5: PRINT "Heh heh."
-END SELECT
+	switch (rp) {
+		case 1: PRINT("Thank you!"); break
+		case 2: PRINT("Please come again!"); break
+		case 3: PRINT("Yeah thanks alot, scum."); break
+		case 4: PRINT("Many thanks."); break
+		case 5: PRINT("Heh heh."); break
+	}
 
-PlayWave "THANK"
-Pause
+	PlayWave("THANK")
+	Pause(callback)
 
-END SUB
+}
 
-SUB UseItem (ItemToUse, p)
+function UseItem (ItemToUse, p) {
 
-COLOR 15
+	COLOR(15)
 
-SELECT CASE ItemToUse
- CASE 11 '@Herb
-  Message "You used an Herb!"
-  player(p).hp = player(p).hp + ran(20, 30)
-  IF player(p).hp > player(p).hpmax THEN player(p).hp = player(p).hpmax
-  item(ItemToUse).amount = item(ItemToUse).amount - 1
-  Pause
- CASE 12 '@Wyvern Wing
-  Message "You feel air swooping by you!"
-  '@ PlayWave "WING"
-  item(ItemToUse).amount = item(ItemToUse).amount - 1
-  Pause
-  map.level = 1
-  LoadMap
- CASE 13 '@Vial
-  Message "You regain some energy!"
-  player(p).mp = player(p).mp + ran(10, 15)
-  IF player(p).mp > player(p).mpmax THEN player(p).mp = player(p).mpmax
-  item(ItemToUse).amount = item(ItemToUse).amount - 1
-  getch
- CASE 14 '@Fish, etch
-  PlayWave "BEEP"
-  Message "This is unusable here..."
-  getch
-END SELECT
+	switch (ItemToUse) {
+		case 11: //@Herb
+			Message("You used an Herb!")
+			player[p].hp = player[p].hp + ran(20, 30)
+			if (player[p].hp > player[p].hpmax) player[p].hp = player[p].hpmax
+			item[ItemToUse].amount = item[ItemToUse].amount - 1
+			Pause()
+		case 12: //@Wyvern Wing
+			Message("You feel air swooping by you!")
+			//@ PlayWave "WING"
+			item[ItemToUse].amount = item[ItemToUse].amount - 1
+			Pause()
+			map.level = 1
+			LoadMap(); break
+		case 13: //@Vial
+			Message("You regain some energy!")
+			player[p].mp = player[p].mp + ran(10, 15)
+			if (player[p].mp > player[p].mpmax) player[p].mp = player[p].mpmax
+			item[ItemToUse].amount = item[ItemToUse].amount - 1
+			getch(); break
+		case 14: //@Fish, etch
+			PlayWave("BEEP")
+			Message("This is unusable here...")
+			getch(); break
+	}
 
-END SUB
-*/
+}
 
 function Warp (warpx, warpy) {
 	PlayWave("WARP")
@@ -3230,23 +3228,23 @@ function Warp (warpx, warpy) {
 	DrawScreen(TRUE)
 }
 
-/*
-SUB Welcome
+function Welcome () {
 
- w$ = "Welcome to "
- w$ = w$ + map.area$
- i = 12
+	var w$ = "Welcome to "
+	w$ = w$ + map.area$
+/* i = 12
  DO
   i = i + 1
  LOOP WHILE RIGHT$(LEFT$(w$, i), 1) <> " "
- w$ = LEFT$(w$, i - 1)
- IF you.leader = 1 THEN w$ = w$ + ", warrior!"
- IF you.leader = 2 THEN w$ = w$ + ", sorceress!"
- IF you.leader = 3 THEN w$ = w$ + ", dragon!"
- COLOR 15: Message w$
+ w$ = LEFT$(w$, i - 1)*/
+	if (you.leader == 1) w$ = w$ + ", warrior!"
+	if (you.leader == 2) w$ = w$ + ", sorceress!"
+	if (you.leader == 3) w$ = w$ + ", dragon!"
+	COLOR(15); Message(w$)
 
-END SUB
+}
 
+/*
 SUB WonBattle
 
 PlayWave "VICTORY"
@@ -3277,7 +3275,9 @@ FOR i = 1 TO you.exist
 NEXT
 
 END SUB
+*/
 
+/*
 SUB WriteReg (Reg, Value)
 
 OUT &H388, Reg    ' 388h = address/status port, 389h = data port
@@ -3293,15 +3293,12 @@ NEXT
 END SUB
 */
 
-function YesNo (YNText$) {
-console.log("YesNo()", arguments);
+function YesNo (YNText$, callback) {
 	Message(YNText$)
-/*
-	DO
-	kbhit$ = INKEY$
-	IF kbhit$ <> "" THEN
-		IF kbhit$ = ESCAPEKEY$ THEN YesNo = FALSE ELSE YesNo = TRUE
-	END IF
-	LOOP
-*/
+	INKEY$(function (kbhit$) {
+		if (kbhit$ != "") {
+			EXIT()
+			if (kbhit$ == ESCAPEKEY$) return callback(FALSE); else return callback(TRUE)
+		}
+	})
 }
