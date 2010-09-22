@@ -3,7 +3,7 @@
 const WIDTH = 480;
 const HEIGHT = 320;
 
-const BAR_HEIGHT = 6;
+const BAR_HEIGHT = 8;
 const TILE_SIZE = 32;
 
 const STATE_ALIVE = "alive";
@@ -45,6 +45,9 @@ function initCanvas () {
 
 function initEvents () {
 	addEventListener("click", function (e) {
+		click(e.pageX, e.pageY);
+	});
+	addEventListener("touchstart", function (e) {
 		click(e.pageX, e.pageY);
 	});
 };
@@ -178,7 +181,7 @@ function click (x, y) {
 			}
 		}
 	} else {
-		console.log('NOT YOUR TURN!');
+		console.log("It's not your turn!");
 	}
 
 	drawScreen();
@@ -241,11 +244,15 @@ function drawActor (actor) {
 			TILE_SIZE, TILE_SIZE
 		);
 	} else {
-		/*
+	/*
+		ctx.save();
+
 		if (actor.team == TEAM_PLAYER) {
+			ctx.globalAlpha = 0.5;
 			var spriteX = 32;
 			var spriteY = 64;
 		} else {
+			ctx.globalAlpha = 0.25;
 			var spriteX = 0;
 			var spriteY = 32;
 		}
@@ -257,6 +264,7 @@ function drawActor (actor) {
 			x, y,
 			TILE_SIZE, TILE_SIZE
 		);
+		ctx.restore();
 		*/
 	}
 
@@ -272,7 +280,7 @@ function drawActor (actor) {
 		ctx.fillStyle = "rgb(0, 0, 0)";
 		ctx.fillRect(1, (TILE_SIZE - BAR_HEIGHT + 1), (TILE_SIZE - 2), (BAR_HEIGHT - 2));
 
-		ctx.fillStyle = "rgb(0, 200, 0)";
+		ctx.fillStyle = getBarColor(mod);
 		ctx.fillRect(1, (TILE_SIZE - BAR_HEIGHT + 1), (mod * (TILE_SIZE - 2)), (BAR_HEIGHT - 2));
 		ctx.restore();
 	}
@@ -291,14 +299,13 @@ function drawActors () {
 };
 
 function drawTiles () {
-return;
 	var draw;
 
 	for (var y = 0; y < (HEIGHT / TILE_SIZE); y++) {
 		for (var x = 0; x < (WIDTH / TILE_SIZE); x++) {
 			draw = !draw;
 			if (!draw) continue;
-			ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+			ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
 			ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
 		}
 	}
@@ -312,7 +319,7 @@ function drawUI () {
 
 	if (actor.team == TEAM_PLAYER) {
 		ctx.save();
-		ctx.fillStyle = "rgb(255, 255, 0)";
+		ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
 		ctx.translate((actor.tileX * TILE_SIZE), (actor.tileY * TILE_SIZE));
 
 		ctx.fillRect(-TILE_SIZE, 0, TILE_SIZE, TILE_SIZE);
@@ -321,6 +328,14 @@ function drawUI () {
 		ctx.fillRect(0, TILE_SIZE, TILE_SIZE, TILE_SIZE);
 		ctx.restore();
 	}
+};
+
+function getActorAt (x, y) {
+	for (var id in actors) {
+		var actor = actors[id];
+		if (actor.isAlive() && (actor.tileX == x) && (actor.tileY == y)) return actor;
+	};
+	return null;
 };
 
 function getActorIdByNextTurn () {
@@ -339,12 +354,13 @@ function getActorIdByNextTurn () {
 	return arguments.callee();
 };
 
-function getActorAt (x, y) {
-	for (var id in actors) {
-		var actor = actors[id];
-		if (actor.isAlive() && (actor.tileX == x) && (actor.tileY == y)) return actor;
-	};
-	return null;
+function getBarColor (mod) {
+	if (mod > 0.5) {
+		return "rgb(80, 184, 72)";
+	} else if (mod > 0.25) {
+		return "rgb(243, 111, 33)";
+	}
+	return "rgb(215, 25, 32)";
 };
 
 function load (callback) {
