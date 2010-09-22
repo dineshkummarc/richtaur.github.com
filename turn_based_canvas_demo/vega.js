@@ -48,7 +48,7 @@ function initEvents () {
 		click(e.pageX, e.pageY);
 	});
 	addEventListener("touchstart", function (e) {
-		click(e.pageX, e.pageY);
+		click(e.touches[0].pageX, e.touches[0].pageY);
 	});
 };
 
