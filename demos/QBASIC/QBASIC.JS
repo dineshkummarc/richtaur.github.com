@@ -293,6 +293,17 @@ this.PRINT = function (msg) {
 	textY++
 }
 
+this.PRINT_USING = function () {
+
+	this.PRINT(arguments[0]);
+
+	/*
+	for (var i = 0; i < arguments.length; ++i) {
+	}
+	*/
+
+}
+
 this.RANDOMIZE = function () {
 	// Not supported
 }

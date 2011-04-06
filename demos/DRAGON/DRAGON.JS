@@ -611,11 +611,11 @@ function DoBattle () {
 	for (var NextMove = 300; NextMove >= 1; NextMove--) {
 		for (var n = 1; n <= you.exist; n++) {
 			if (NextMove == player[n].dx) DoPlayerMove(n)
-			if (BattleStatus != NONE) ;//EXIT SUB
+			if (BattleStatus != NONE) return
 		}
 		for (var n = 1; n <= map.num; n++) {
 			if (NextMove == foe[n].dx) DoFoeMove(n)
-			if (BattleStatus != NONE) ;//EXIT SUB
+			if (BattleStatus != NONE) return
 		}
 	}
 
@@ -824,52 +824,52 @@ IF player(p).state <> DEATH THEN
  DrawBattle
 END IF
 END SUB
-
-SUB DrawBattle
-
- CLS : DrawScreen (FALSE)
-
- COLOR 15
- LOCATE 18, 2: PRINT "ÚÄÄÄÄÄÄÄÄÄÄ¿ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿ÚÄÄÄÄÄÄÄÄÄ¿"
- LOCATE 19, 2: PRINT "³          ³³             ³³ ATTACK  ³"
- LOCATE 20, 2: PRINT "³          ³³HP:           ³³ SPECIAL ³"
- LOCATE 21, 2: PRINT "³          ³³HP:           ³³ SPELL   ³"
- LOCATE 22, 2: PRINT "³          ³³HP:           ³³ ITEM    ³"
- LOCATE 23, 2: PRINT "ÀÄÄÄÄÄÄÄÄÄÄÙÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙÀÄÄÄÄÄÄÄÄÄÙ"
- LOCATE 19, 16: PRINT player(you.leader).pname
- LOCATE 20, 18: PRINT USING "####/####"; player(1).hp; player(1).hpmax
- IF you.exist >= 2 THEN LOCATE 21, 18: PRINT USING "####/####"; player(2).hp; player(2).hpmax
- IF you.exist >= 3 THEN LOCATE 22, 18: PRINT USING "####/####"; player(3).hp; player(3).hpmax
-
- FOR i = 1 TO you.exist
-  IF player(i).state <> DEATH THEN
-   IF i = 1 THEN PUT (player(1).x, player(1).y), hero, PSET
-   IF i = 2 THEN PUT (player(2).x, player(2).y), hero2, PSET
-   IF i = 3 THEN PUT (player(3).x, player(3).y), hero3, PSET
-  ELSE
-   IF i = 1 THEN PUT (player(1).x, player(1).y), dead, PSET
-   IF i = 2 THEN PUT (player(2).x, player(2).y), dead2, PSET
-   IF i = 3 THEN PUT (player(3).x, player(3).y), dead3, PSET
-  END IF
- NEXT
-
- FOR i = 1 TO map.num
-  IF foe(i).hp > 0 THEN
-   LOCATE i + 18, 3: PRINT foe(i).pname
-   SELECT CASE foe(i).num
-    CASE 1: PUT (foe(i).x, foe(i).y), slime, PSET
-    CASE 2: PUT (foe(i).x, foe(i).y), goblin, PSET
-    CASE 3: PUT (foe(i).x, foe(i).y), orc, PSET
-    CASE 4: PUT (foe(i).x, foe(i).y), wolf, PSET
-    CASE 5: PUT (foe(i).x, foe(i).y), skeleton, PSET
-    CASE 6: PUT (foe(i).x, foe(i).y), ghoul, PSET
-    CASE 10: PUT (foe(i).x, foe(i).y), jack, PSET
-   END SELECT
-  END IF
- NEXT
-
-END SUB
 */
+
+function DrawBattle () {
+
+	CLS; DrawScreen(FALSE)
+
+	COLOR(15)
+	LOCATE(18, 2); PRINT("ÚÄÄÄÄÄÄÄÄÄÄ¿ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿ÚÄÄÄÄÄÄÄÄÄ¿")
+	LOCATE(19, 2); PRINT("³          ³³             ³³ ATTACK  ³")
+	LOCATE(20, 2); PRINT("³          ³³HP:           ³³ SPECIAL ³")
+	LOCATE(21, 2); PRINT("³          ³³HP:           ³³ SPELL   ³")
+	LOCATE(22, 2); PRINT("³          ³³HP:           ³³ ITEM    ³")
+	LOCATE(23, 2); PRINT("ÀÄÄÄÄÄÄÄÄÄÄÙÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙÀÄÄÄÄÄÄÄÄÄÙ")
+	LOCATE(19, 16); PRINT(player[you.leader].pname)
+	LOCATE(20, 18); PRINT_USING("####/####", player[1].hp, player[1].hpmax)
+	if (you.exist >= 2) { LOCATE(21, 18); PRINT_USING("####/####", player[2].hp, player(2).hpmax) }
+	if (you.exist >= 3) { LOCATE(22, 18); PRINT_USING("####/####", player[3].hp, player(3).hpmax) }
+
+	for (var i = 1; i <= you.exist; i++) {
+		if (player[i].state != DEATH) {
+			if (i == 1) PUT(player[1].x, player[1].y, hero, PSET)
+			if (i == 2) PUT(player[2].x, player[2].y, hero2, PSET)
+			if (i == 3) PUT(player[3].x, player[3].y, hero3, PSET)
+		} else {
+			if (i == 1) PUT(player[1].x, player[1].y, dead, PSET)
+			if (i == 2) PUT(player[2].x, player[2].y, dead2, PSET)
+			if (i == 3) PUT(player[3].x, player[3].y, dead3, PSET)
+		}
+	}
+
+	for (var i = 1; i <= map.num; i++) {
+		if (foe[i].hp > 0) {
+			LOCATE(i + 18, 3); PRINT(foe[i].pname)
+			switch (foe[i].num) {
+				case 1: PUT(foe[i].x, foe[i].y, slime, PSET); break
+				case 2: PUT(foe[i].x, foe[i].y, goblin, PSET); break
+				case 3: PUT(foe[i].x, foe[i].y, orc, PSET); break
+				case 4: PUT(foe[i].x, foe[i].y, wolf, PSET); break
+				case 5: PUT(foe[i].x, foe[i].y, skeleton, PSET); break
+				case 6: PUT(foe[i].x, foe[i].y, ghoul, PSET); break
+				case 10: PUT(foe[i].x, foe[i].y, jack, PSET); break
+			}
+		}
+	}
+
+}
 
 function DrawFile (siz, drf$, callback) {
 	var xhr = new XMLHttpRequest()
@@ -1338,6 +1338,7 @@ function GetInput$ (gx, gy, length, gerase$, callback) {
 }
 
 function GetMoves () {
+	console.log('GetMoves()');
 	COLOR(15)
 /*
 FOR g = 1 TO you.exist
@@ -2804,18 +2805,14 @@ function Status () {
 		if (p == 3) PUT(152, 0, hero3, PSET)
 
 		PRINT(TAB(3)+" "+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
-		PRINT(TAB(3)+" "+ "³"+" "+ player(p).pname$)
+		PRINT(TAB(3)+" "+ "³"+" "+ player[p].pname$)
 		PRINT(TAB(3)+" "+ "³")
-	/*
-		PRINT(USING "  ³ HP ####/####"+ player(p).hp+" "+ player(p).hpmax)
-		PRINT(USING "  ³ MP ####/####"; player(p).mp;+" "+ player(p).mpmax)
-		PRINT(USING "  ³ LV ####";+" "+ player(p).lv)
-	*/
+		PRINT_USING("  ³ HP ####/####", player[p].hp," ", player[p].hpmax)
+		PRINT_USING("  ³ MP ####/####", player[p].mp," ", player[p].mpmax)
+		PRINT_USING("  ³ LV ####"," ", player[p].lv)
 		PRINT(TAB(3)+" "+ "³")
-	/*
-		PRINT(USING "  ³ XP ####/####"; player(p).total; player(p).xp)
-		PRINT(USING "  ³   #########"; you.gold)
-	*/
+		PRINT_USING("  ³ XP ####/####", player[p].total, player[p].xp)
+		PRINT_USING("  ³   #########", you.gold)
 		PRINT(TAB(3)+" "+ "³")
 		PRINT(TAB(3)+" "+ "³ ST "+" "+ player[p].st)
 		PRINT(TAB(3)+" "+ "³ DX "+" "+ player[p].dx)

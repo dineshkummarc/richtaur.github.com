@@ -26,10 +26,14 @@
 			SCREEN(13)
 			DrawScreen()
 
+			COLOR(1)
 			LOCATE(5, 5)
 			PRINT("HELLO WORLD")
 			PRINT("MOVE AROUND WITH THE ARROW KEYS")
 			PRINT("PRESS ESC TO CLEAR SCREEN")
+			PRINT("")
+			COLOR(14)
+			PRINT("VIEW SOURCE! IT LOOKS LIKE QBASIC")
 
 			INKEY$(function (key) {
 				if (color++ > 255) color = 1;
