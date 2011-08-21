@@ -1158,21 +1158,23 @@ function Fishery () {
 	})
 }
 
+// TODO: connect callbacks
+function Flicker (flx, fly, fls, callback) {
+
+	delete back
+	back = GET(flx, fly, flx + fls, fly + fls)
+
+	for (var i = 1; i <= 3; ++i) {
+		LINE(flx, fly, flx + fls, fly + fls, 31, B)
+		delay(1000, function () {
+			PUT(flx, fly, back, PSET)
+			delay(1000)
+		})
+	}
+
+}
+
 /*
-SUB Flicker (flx, fly, fls)
-
- ERASE back
- GET (flx, fly)-(flx + fls, fly + fls), back
-
- FOR i = 1 TO 3
-  LINE (flx, fly)-(flx + fls, fly + fls), 31, B
-  delay (1000)
-  PUT (flx, fly), back, PSET
-  delay (1000)
- NEXT
-
-END SUB
-
 SUB GameOver
 
  CLS
