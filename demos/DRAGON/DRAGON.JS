@@ -389,7 +389,7 @@ function Arrow (ax, miny, maxy, aclr, callback) {
 }
 
 function Battle () {
- 
+
 /*
 	DO
 		GetMoves
@@ -411,7 +411,7 @@ function Battle () {
 }
 
 function BattleItems (plib) {
-      
+
 	COLOR(15)
 	LOCATE(4, 1);  Box(11, 23)
 	LOCATE(12, 4); PRINT(">INVENTORY")
@@ -647,7 +647,7 @@ SUB DoDamage (forp, whi, ddamage)
   PUT (player(whi).x, player(whi).y), back, PSET
   IF player(whi).hp < 1 THEN CALL DoDeath(GOOD, whi)
  END IF
- 
+
 END SUB
 
 SUB DoDeath (ddfp, ddp)
@@ -978,11 +978,11 @@ function File (FileType, callback) {
 		LOCATE(5, 1); COLOR(15)
 
 		if (FileType == 1) {
-	 
+
 			PRINT(TAB(3)+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
 			PRINT(TAB(3)+ "³>SAVING                           ³")
 			PRINT(TAB(3)+ "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ")
- 
+
 /*
   OPEN a$ FOR OUTPUT AS #1
    PRINT #1, Crown
@@ -1042,7 +1042,7 @@ function File (FileType, callback) {
    NEXT: NEXT
   CLOSE : LOCATE 6, 1
 */
- 
+
 			PRINT(TAB(3)+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
 			PRINT(TAB(3)+ "³>SAVE                             ³")
 			PRINT(TAB(3)+ "³ Finished saving.  Hit any key... ³")
@@ -1051,11 +1051,11 @@ function File (FileType, callback) {
 		}
 
 		if (FileType == 2) {
-	 
+
 			PRINT(TAB(3)+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
 			PRINT(TAB(3)+ "³>LOADING                          ³")
 			PRINT(TAB(3)+ "ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ")
-	 
+
 			OPEN(a$, 1, function () {
 				Crown = Number(INPUT(1))
 				MasterKey = Number(INPUT(1))
@@ -1113,7 +1113,7 @@ function File (FileType, callback) {
 						tile[a][d].style = Number(INPUT(1))
 				}; }
 			}) ;  LOCATE(6, 1)
- 
+
 			PRINT(TAB(3)+ "ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿")
 			PRINT(TAB(3)+ "³>LOAD                             ³")
 			PRINT(TAB(3)+ "³ Finished loading.  Hit any key...³")
