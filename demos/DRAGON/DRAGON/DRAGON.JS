@@ -873,7 +873,7 @@ function DrawBattle () {
 
 function DrawFile (siz, drf$, callback) {
 	var xhr = new XMLHttpRequest()
-	xhr.open("GET", "DRAGON/" + drf$, false) // TODO
+	xhr.open("GET", "DRAGON/" + drf$, false) // TODO <-- what? make a helper?
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState == 4) {
 			var line = 0
@@ -2381,8 +2381,8 @@ function RandTalk () {
 	}
 	COLOR(15); Message(a$)
 }
-/*
 
+/*
 SUB Search (find)
  LOCATE 3, 1: COLOR 15
  SELECT CASE find
@@ -2446,8 +2446,8 @@ SUB SellItems (sellclr)
  END SELECT
 
 END SUB
-
 */
+
 function SetStats () {
 	for (var t = 1; t <= you.exist; t++) {
 		if (player[t].mp < 0) player[t].mp = 0
@@ -2912,7 +2912,6 @@ function Surrounding (st) {
 }
 
 function TestReturn () {
-//console.log("TestReturn()", arguments);
 
 	COLOR(15)
 
@@ -3276,21 +3275,19 @@ NEXT
 END SUB
 */
 
-/*
-SUB WriteReg (Reg, Value)
+function WriteReg (Reg, Value) {
 
-OUT &H388, Reg    ' 388h = address/status port, 389h = data port
-FOR i = 0 TO 5    ' This tells the SB what register we want to write to
-a = INP(&H388)    ' After we write to the address port we must wait 3.3ms
-NEXT
+	OUT("&H388", Reg)    // 388h = address/status port, 389h = data port
+	for (var i = 0; i <= 5; i++) {    // This tells the SB what register we want to write to
+		var a = INP("&H388")    // After we write to the address port we must wait 3.3ms
+	}
 
-OUT &H389, Value  ' Send the value for the register to 389h
-FOR i = 0 TO 34   ' Here we must also wait, this time 23ms
-a = INP(&H388)
-NEXT
+	OUT("&H389", Value)  // Send the value for the register to 389h
+	for (var i = 0; i <= 34; i++) {   // Here we must also wait, this time 23ms
+		var a = INP("&H388")
+	}
 
-END SUB
-*/
+}
 
 function YesNo (YNText$, callback) {
 	Message(YNText$)

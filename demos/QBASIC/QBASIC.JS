@@ -143,7 +143,6 @@ this.CLEAR = function () {
 }
 
 this.CLS = function () {
-console.log("CLS()", arguments);
 	textX = DEFAULT
 	textY = DEFAULT
 	if (context) {
@@ -174,16 +173,20 @@ this.GET = function (x, y, width, height) {
 	return context.getImageData(x, y, width, height)
 }
 
-this.BEEP = function () {
-	alert("BEEP!")
-}
-
 this.EOF = function (index) {
 	return Boolean(fileLines[index].length)
 }
 
 this.INKEY$ = function (callback) {
 	INKEY$Queue.push(callback)
+}
+
+this.INP = function (address) {
+	// WTF is this supposed to do
+}
+
+this.OUT = function (address, value) {
+	// WTF is this supposed to do
 }
 
 this.INPUT = function (index) {
@@ -313,7 +316,6 @@ this.RND = function () {
 }
 
 this.SCREEN = function (screen) {
-//console.log("SCREEN()", arguments);
 	if (canvas === undefined) {
 		canvas = document.createElement("canvas")
 		document.body.appendChild(canvas)
