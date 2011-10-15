@@ -49,7 +49,7 @@ function read_image ($filename, $size) {
 
 function set_palette ($image) {
 	$colors = array(
-		'0' => imagecolorallocatealpha($image, 0x00, 0x00, 0x00, 127),
+		'0' => imagecolorallocatealpha($image, 0, 0, 0, 127),
 		// guesses
 		'1' => imagecolorallocate($image, 0, 0, 255),
 		'2' => imagecolorallocate($image, 0, 255, 0),
@@ -139,7 +139,7 @@ function set_palette ($image) {
 	);
 
 	for ($i = 1; $i < 63; ++$i) {
-		$colors[$i + 192] = imagecolorallocate($image, $i + 192, 0, 0);
+		$colors[$i + 192] = imagecolorallocate($image, $i * 4, 0, 0);
 	}
 
 	return $colors;
